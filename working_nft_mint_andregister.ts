@@ -1,25 +1,14 @@
 import { SPGNFTContractAddress, client } from './utils/utils'
 import { uploadJSONToIPFS } from './utils/uploadToIpfs'
 import { createHash } from 'crypto'
-import { LicenseTerms, WIP_TOKEN_ADDRESS } from "@story-protocol/core-sdk";
-import { zeroAddress } from 'viem';
-import { getAgentRecommendation } from './agent_discussion';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 // BEFORE YOU RUN THIS FUNCTION: Make sure to read the README
 // which contains instructions for running this "Simple Mint and Register SPG" example.
 
 const main = async function () {
-    // Get the agent recommendations first
-    console.log("Getting agent recommendations...");
-    const { licensingCost, royaltiesPercent } = await getAgentRecommendation();
-    console.log("Final agreed values:");
-    console.log("Licensing Cost:", licensingCost);
-    console.log("Royalties Percent:", royaltiesPercent);
-
-    // Then set up metadata and license terms
+    // 1. Set up your IP Metadata
+    //
+    // Docs: https://docs.story.foundation/docs/ipa-metadata-standard
     const ipMetadata = {
         title: 'Orangutan',
         description: 'This is an Orangutan',
@@ -41,21 +30,7 @@ const main = async function () {
     const nftMetadata = {
         name: 'Orangutan NFT',
         description: 'This is an Orangutan. This NFT represents ownership of the IP Asset.',
-        image: 'https://ipfs.io/ipfs/bafkreib2bj47jxznqie4dm4xwkzrqc2v5ckqe52fquulmznwyl24uzedru',
-        attributes: [
-            {
-                key: 'Description',
-                value: 'amazedneurofunk956',
-            },
-            {
-                key: 'Artist ID',
-                value: '4123743b-8ba6-4028-a965-75b79a3ad424',
-            },
-            {
-                key: 'Source',
-                value: 'Suno.com',
-            },
-        ],/*
+        image: 'https://ipfs.io/ipfs/bafkreib2bj47jxznqie4dm4xwkzrqc2v5ckqe52fquulmznwyl24uzedru',/*
         media: [
             {
                 name: 'Midnight Marriage',
@@ -91,45 +66,12 @@ const main = async function () {
     const nftHash = createHash('sha256').update(JSON.stringify(nftMetadata)).digest('hex')
     console.log('NFT Metadata IPFS CID:', nftIpfsHash)
 
-    // Set up license terms with negotiated values
-    const terms: LicenseTerms = {
-        transferable: true,
-        royaltyPolicy: "0xBe54FB168b3c982b7AaE60dB6CF75Bd8447b390E",
-        defaultMintingFee: BigInt(licensingCost),
-        expiration: BigInt(0),
-        commercialUse: true,
-        commercialAttribution: true,
-        commercializerChecker: zeroAddress,
-        commercializerCheckerData: zeroAddress,
-        commercialRevShare: royaltiesPercent,
-        commercialRevCeiling: BigInt(0),
-        derivativesAllowed: false,
-        derivativesAttribution: false,
-        derivativesApproval: false,
-        derivativesReciprocal: false,
-        derivativeRevCeiling: BigInt(0),
-        currency: WIP_TOKEN_ADDRESS,
-        uri: ''
-    };
-
-    const licensingConfig = {
-        isSet: true,
-        mintingFee: BigInt(licensingCost),
-        licensingHook: zeroAddress,
-        hookData: "0x" as `0x${string}`,
-        commercialRevShare: royaltiesPercent,
-        disabled: false,
-        expectMinimumGroupRewardShare: 0,
-        expectGroupRewardPool: zeroAddress
-    };
-
     // 4. Register the NFT as an IP Asset
     //
     // Docs: https://docs.story.foundation/docs/sdk-ipasset#mintandregisterip
-    const response = await client.ipAsset.mintAndRegisterIpAssetWithPilTerms({
+    const response = await client.ipAsset.mintAndRegisterIp({
         spgNftContract: SPGNFTContractAddress,
         allowDuplicates: true,
-        licenseTermsData: [{ terms, licensingConfig }],
         ipMetadata: {
             ipMetadataURI: `https://ipfs.io/ipfs/bafkreib2bj47jxznqie4dm4xwkzrqc2v5ckqe52fquulmznwyl24uzedru`,
             ipMetadataHash: `0x${ipHash}`,
@@ -142,4 +84,4 @@ const main = async function () {
     console.log(`View on the explorer: https://aeneid.explorer.story.foundation/ipa/${response.ipId}`)
 }
 
-main().catch(console.error);
+main()

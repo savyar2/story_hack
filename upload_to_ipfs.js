@@ -4,7 +4,7 @@ const fs = require('fs');
 const pinata = new PinataSDK('88965623d10c3c98cd98', 'afc688afc3d6ed1908056b63488d6edf7f4731ef911e445b0317a464f3031dff');
 
 async function uploadToIPFS() {
-    const filePath = 'my-pookie.png'; // Ensure this file exists
+    const filePath = 'oranguatan.png'; // Ensure this file exists
     const readableStreamForFile = fs.createReadStream(filePath);
 
     const options = {
@@ -26,4 +26,3 @@ async function uploadToIPFS() {
 
 uploadToIPFS();
 
-uploadToIPFS();
