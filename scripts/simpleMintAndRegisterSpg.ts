@@ -5,6 +5,8 @@ import { LicenseTerms, WIP_TOKEN_ADDRESS } from "@story-protocol/core-sdk";
 import { zeroAddress } from 'viem';
 import { getAgentRecommendation } from './agent_discussion';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
 
@@ -12,14 +14,46 @@ dotenv.config();
 // which contains instructions for running this "Simple Mint and Register SPG" example.
 
 const main = async function () {
-    // Get the agent recommendations first
+    // FIRST: Complete agent negotiation
     console.log("Getting agent recommendations...");
     const { licensingCost, royaltiesPercent } = await getAgentRecommendation();
     console.log("Final agreed values:");
     console.log("Licensing Cost:", licensingCost);
     console.log("Royalties Percent:", royaltiesPercent);
+    
+    // THEN: Read metadata and proceed with minting
+    // Define the path to the metadata file
+    const metadataFilePath = path.join(__dirname, 'metadata.json');
+    
+    // Read metadata from the file
+    let metadata;
+    try {
+        if (fs.existsSync(metadataFilePath)) {
+            // Read the file
+            metadata = JSON.parse(fs.readFileSync(metadataFilePath, 'utf8'));
+            console.log("Using metadata from song:", metadata.title);
+            
+            // Clear the file by writing an empty JSON object
+            fs.writeFileSync(metadataFilePath, JSON.stringify({}, null, 2));
+            console.log("Metadata file cleared after reading");
+        } else {
+            console.log("No song metadata available. Please click the License button on a track first.");
+            return;
+        }
+    } catch (error) {
+        console.error("Error reading or clearing metadata file:", error);
+        return;
+    }
+    
+    // Now the metadata variable contains the song data including image_url
+    console.log("Metadata loaded:", metadata);
+    
+    const ipfsCID = await uploadJSONToIPFS(metadata);
+    console.log(`🎵 Your file is uploaded! IPFS CID: ${ipfsCID}`);
+    
 
     // Then set up metadata and license terms
+    /*
     const ipMetadata = {
         title: 'Orangutan',
         description: 'This is an Orangutan',
@@ -34,26 +68,56 @@ const main = async function () {
         image: 'https://ipfs.io/ipfs/bafkreib2bj47jxznqie4dm4xwkzrqc2v5ckqe52fquulmznwyl24uzedru',
         mediaType: 'image/png',
     }
+    */
+    const ipMetadata = {
+        title: metadata.name,
+        description: `Song by ${metadata.artist} (For testing purposes only)`,
+        ipType: 'Music',
+        createdAt: metadata.release_date,
+        attributes: [
+            {
+                key: 'Platform',
+                value: 'Spotify',
+            },
+            {
+                key: 'Album',
+                value: metadata.album,
+            },
+            {
+                key: 'URL',
+                value: `https://ipfs.io/ipfs/${ipfsCID}`,
+            },
+            {
+                key: 'Duration',
+                value: metadata.duration_ms.toString(),
+            },
+            {
+                key: 'Popularity',
+                value: metadata.popularity.toString(),
+            }
+        ],
+        creators: [
+            {
+                name: metadata.artist,
+                address: '0x3E4c6e6A4Ec550F873081baA1dB5feD205856482', // Replace with dynamic wallet address
+                contributionPercent: 100,
+            },
+        ],
+    };
+
 
     // 2. Set up your NFT Metadata
     //
     // Docs: https://docs.opensea.io/docs/metadata-standards#metadata-structure
     const nftMetadata = {
-        name: 'Orangutan NFT',
-        description: 'This is an Orangutan. This NFT represents ownership of the IP Asset.',
-        image: 'https://ipfs.io/ipfs/bafkreib2bj47jxznqie4dm4xwkzrqc2v5ckqe52fquulmznwyl24uzedru',
+        name: metadata.name,
+        description: 'This NFT represents ownership of the IP Asset. (Not really because it\'s a test)',
+        image: metadata.image_url,
+        
         attributes: [
             {
-                key: 'Description',
-                value: 'amazedneurofunk956',
-            },
-            {
-                key: 'Artist ID',
-                value: '4123743b-8ba6-4028-a965-75b79a3ad424',
-            },
-            {
-                key: 'Source',
-                value: 'Suno.com',
+                key: 'URL',
+                value: `https://ipfs.io/ipfs/${ipfsCID}`,
             },
         ],/*
         media: [
@@ -91,7 +155,7 @@ const main = async function () {
     const nftHash = createHash('sha256').update(JSON.stringify(nftMetadata)).digest('hex')
     console.log('NFT Metadata IPFS CID:', nftIpfsHash)
 
-    // Set up license terms with negotiated values
+    // Use the negotiated values for the license terms
     const terms: LicenseTerms = {
         transferable: true,
         royaltyPolicy: "0xBe54FB168b3c982b7AaE60dB6CF75Bd8447b390E",
@@ -131,7 +195,7 @@ const main = async function () {
         allowDuplicates: true,
         licenseTermsData: [{ terms, licensingConfig }],
         ipMetadata: {
-            ipMetadataURI: `https://ipfs.io/ipfs/bafkreib2bj47jxznqie4dm4xwkzrqc2v5ckqe52fquulmznwyl24uzedru`,
+            ipMetadataURI: `https://ipfs.io/ipfs/${ipfsCID}`,
             ipMetadataHash: `0x${ipHash}`,
             nftMetadataURI: `https://ipfs.io/ipfs/${nftIpfsHash}`,
             nftMetadataHash: `0x${nftHash}`,

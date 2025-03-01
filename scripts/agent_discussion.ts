@@ -2,9 +2,10 @@
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
 import fs from 'fs';
+import path from 'path';
 import { getSongDescription } from './song_to_description';
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // Create a single OpenAI instance for all calls
 const openai = new OpenAI({
@@ -16,6 +17,22 @@ export interface AgentOutput {
   licensingCost: number;
   royaltiesPercent: number;
   description: string;
+}
+
+// Define the path to the metadata file
+const metadataFilePath = path.join(__dirname, 'metadata.json');
+
+// Function to get the popularity from metadata.json
+function getPopularityFromMetadata(): number {
+  try {
+    if (fs.existsSync(metadataFilePath)) {
+      const metadata = JSON.parse(fs.readFileSync(metadataFilePath, 'utf8'));
+      return metadata.popularity || 0;
+    }
+  } catch (error) {
+    console.error('Error reading metadata file:', error);
+  }
+  return 0; // Default value if metadata cannot be read
 }
 
 // Utility function to clean markdown code fences from a string
@@ -47,7 +64,7 @@ async function getAgentAOutput(
   previousBOutput?: AgentOutput
 ): Promise<AgentOutput> {
   let prompt = `You are Agent A, widely considered the best analyzer for artists' profiles and songs.
-Based on the song description: "${songDesc}" and given that the song has ${monthlyListeners} monthly listeners,
+Based on the song description: "${songDesc}" and given that the song is ranked ${monthlyListeners} in popularity,
 generate a JSON object with:
   - "licensingCost": licensing cost in dollars (integer),
   - "royaltiesPercent": royalty percentage (integer),
@@ -90,7 +107,7 @@ async function getAgentBOutput(
   previousAOutput?: AgentOutput
 ): Promise<AgentOutput> {
   let prompt = `You are Agent B, widely considered the best royalties negotiator.
-Based on the song description: "${songDesc}" and given that the song has ${monthlyListeners} monthly listeners,
+Based on the song description: "${songDesc}" and given that the song is ranked ${monthlyListeners} in popularity,
 generate a JSON object with:
   - "licensingCost": licensing cost in dollars (integer),
   - "royaltiesPercent": royalty percentage (integer),
@@ -144,7 +161,7 @@ export async function getAgentRecommendation(): Promise<{ licensingCost: number,
   const songDesc = await getSongDescription(filePath);
   console.log("Song Description:\n", songDesc);
 
-  const monthlyListeners = 100000; // hardcoded monthly listener count
+  const monthlyListeners = getPopularityFromMetadata(); // hardcoded monthly listener count
 
   let agentAOutput: AgentOutput | undefined;
   let agentBOutput: AgentOutput | undefined;

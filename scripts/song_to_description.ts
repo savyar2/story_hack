@@ -1,8 +1,25 @@
 import OpenAI from 'openai';
 import fs from 'fs';
 import dotenv from 'dotenv';
+import path from 'path';
 
 dotenv.config();
+
+// Define the path to the metadata file
+const metadataFilePath = path.join(__dirname, 'metadata.json');
+
+// Function to get the popularity from metadata.json
+function getPopularityFromMetadata(): number {
+  try {
+    if (fs.existsSync(metadataFilePath)) {
+      const metadata = JSON.parse(fs.readFileSync(metadataFilePath, 'utf8'));
+      return metadata.popularity || 0;
+    }
+  } catch (error) {
+    console.error('Error reading metadata file:', error);
+  }
+  return 0; // Default value if metadata cannot be read
+}
 
 const filePath = 'song.mp3';
 /**
@@ -70,19 +87,20 @@ Please provide a clear and organized description.
  * Main function to tie it all together.
  */
 export async function getSongDescription(filePath: string): Promise<string> {
-    try {
-      const transcript = await getAudioTranscription(filePath);
-      const description = await generateAudioDescription(transcript);
-      return description;
-    } catch (error) {
-      console.error('Error:', error);
-      return 'No description available.';
-    }
+  try {
+    const transcript = await getAudioTranscription(filePath);
+    const description = await generateAudioDescription(transcript);
+    return description;
+  } catch (error) {
+    console.error('Error:', error);
+    return 'No description available.';
   }
-  
-  // Call this function in your main logic
-  (async () => {
-    const filePath = 'song.mp3';
-    const description = await getSongDescription(filePath);
-    console.log('Audio Description:\n', description + '\nMonthly Listeners: 100000');
-  })();
+}
+
+// Call this function in your main logic
+(async () => {
+  const filePath = 'song.mp3';
+  const description = await getSongDescription(filePath);
+  const popularity = getPopularityFromMetadata();
+  console.log('Audio Description:\n', description + `\nPopularity: ${popularity}`);
+})();
