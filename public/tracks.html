@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Spotify Top Tracks</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .track { 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px; 
+            margin: 5px 0; 
+            background: #f4f4f4; 
+            border-radius: 5px;
+        }
+        .track:hover { background: #e0e0e0; }
+        .license-button {
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .license-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Spotify Top Tracks</h1>
+    <div id="tracks-container"></div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        
+        if (!token) {
+            document.body.innerHTML = '<h1>Error: No access token found</h1>';
+        } else {
+            const tracksContainer = document.getElementById('tracks-container');
+            tracksContainer.innerHTML = '<p>Loading tracks...</p>';
+            
+            fetch('https://api.spotify.com/v1/me/top/tracks?limit=50', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`HTTP error! Status: ${response.status}, Response: ${text}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                tracksContainer.innerHTML = '';
+                
+                if (!data.items || data.items.length === 0) {
+                    tracksContainer.innerHTML = '<p>No tracks found.</p>';
+                    return;
+                }
+                
+                data.items.forEach(track => {
+                    const trackElement = document.createElement('div');
+                    trackElement.className = 'track';
+                    trackElement.innerHTML = `
+                        <span><strong>${track.name}</strong> - ${track.artists.map(a => a.name).join(', ')}</span>
+                        <button class="license-button">License</button>
+                    `;
+                    trackElement.querySelector('.license-button').onclick = () => {
+                        const metadata = {
+                            name: track.name,
+                            artist: track.artists.map(a => a.name).join(', '),
+                            album: track.album.name,
+                            release_date: track.album.release_date,
+                            duration_ms: track.duration_ms,
+                            popularity: track.popularity,
+                            spotify_url: track.external_urls.spotify,
+                            image_url: track.album.images[0]?.url || '',
+                            //images: track.album.images
+                        };
+                        
+                        // Log to browser console
+                        console.log('🎵 Song Metadata:', metadata);
+                        
+                        // Send to server to log in terminal
+                        fetch('/log-metadata', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(metadata)
+                        });
+                    };
+                    tracksContainer.appendChild(trackElement);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching tracks:', error);
+                tracksContainer.innerHTML = `<p>Error loading tracks: ${error.message}</p>`;
+            });
+        }
+    </script>
+</body>
+</html>

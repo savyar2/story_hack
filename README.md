@@ -31,6 +31,10 @@ OPENAI_API_KEY=<your_openai_api_key>
 PINATA_JWT=<your_pinata_jwt>
 WALLET_PRIVATE_KEY=<your_story_protocol_testnet_wallet_private_key>
 ROYALTY_POLICY_LAP=<your_story_protocol_royalty_policy>
+SPOTIFY_CLIENT_ID=<your_spotify_client_id>
+SPOTIFY_CLIENT_SECRET=<your_spotify_client_secret>
+SPOTIFY_REDIRECT_URI=http://localhost:3000/callback
+
 
 ### Project Structure
 ```bash
@@ -38,7 +42,9 @@ ROYALTY_POLICY_LAP=<your_story_protocol_royalty_policy>
   ├── agent_discussion.ts         # AI agents negotiate licensing & royalties  
   ├── song_to_description.ts      # Transcribes and analyzes MP3  
   ├── simpleMintAndRegisterSpg.ts # Mints NFT & registers IP on Story Protocol  
-  ├── attach_license.ts           # Attaches license terms to the IP asset  
+  ├── attachLicenseTerms.ts           # Attaches license terms to the IP asset  
+  ├── spotifyLogin.ts             # Login to Spotify and get tracks
+
 /utils  
   ├── utils.ts                    # Story Protocol & wallet configuration  
   ├── uploadToIpfs.ts             # Uploads metadata to IPFS  
@@ -62,7 +68,7 @@ Smart contracts automate royalty payouts when the song is licensed.
 
 ### 1️⃣ Generate Song Description & Licensing Terms, and Mint NFT & Register IP
 ```bash
-npm run mint-and-register-spg
+npx ts-node scripts/spotifyLogin.ts
 ```
 
 ### 🌍 Future Enhancements

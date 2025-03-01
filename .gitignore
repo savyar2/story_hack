@@ -5,3 +5,5 @@ node_modules
 pnpm-lock.yaml
 yalc.lock
 package-lock.json
+song.mp3
+ignore/
