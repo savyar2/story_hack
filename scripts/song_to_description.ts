@@ -3,7 +3,8 @@ import fs from 'fs';
 import dotenv from 'dotenv';
 import path from 'path';
 
-dotenv.config();
+// Load environment variables from .env file in the project root
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // Define the path to the metadata file
 const metadataFilePath = path.join(__dirname, 'metadata.json');
@@ -21,13 +22,20 @@ function getPopularityFromMetadata(): number {
   return 0; // Default value if metadata cannot be read
 }
 
-const filePath = 'song.mp3';
+const filePath = 'scripts/song.mp3';
 /**
  * Create an OpenAI instance using openai@4.x style.
  * Make sure you have OPENAI_API_KEY in your .env file.
  */
+// Ensure the API key is available
+const apiKey = process.env.OPENAI_API_KEY;
+if (!apiKey) {
+  console.error('OPENAI_API_KEY is not set in environment variables or .env file');
+  console.error('Current environment variables:', Object.keys(process.env));
+}
+
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: apiKey,
 });
 
 /**
@@ -88,19 +96,30 @@ Please provide a clear and organized description.
  */
 export async function getSongDescription(filePath: string): Promise<string> {
   try {
+    // Check if file exists before proceeding
+    if (!fs.existsSync(filePath)) {
+      console.error(`File does not exist at: ${filePath}`);
+      return 'No description available.';
+    }
+    
+    console.log(`Processing audio file at: ${filePath}`);
     const transcript = await getAudioTranscription(filePath);
     const description = await generateAudioDescription(transcript);
     return description;
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in getSongDescription:', error);
     return 'No description available.';
   }
 }
 
-// Call this function in your main logic
-(async () => {
-  const filePath = 'song.mp3';
-  const description = await getSongDescription(filePath);
-  const popularity = getPopularityFromMetadata();
-  console.log('Audio Description:\n', description + `\nPopularity: ${popularity}`);
-})();
+// Optional self-test when running directly
+if (require.main === module) {
+  (async () => {
+    // Use __dirname to ensure correct path when run directly
+    const songPath = path.join(__dirname, 'song.mp3');
+    console.log(`Testing with song at: ${songPath}`);
+    const description = await getSongDescription(songPath);
+    const popularity = getPopularityFromMetadata();
+    console.log('Audio Description:\n', description + `\nPopularity: ${popularity}`);
+  })();
+}

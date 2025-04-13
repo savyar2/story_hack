@@ -156,12 +156,13 @@ function hasConverged(a: AgentOutput, b: AgentOutput, threshold: number = 5): bo
  */
 export async function getAgentRecommendation(): Promise<{ licensingCost: number, royaltiesPercent: number }> {
   // First, obtain a song description from the audio file
-  const filePath = 'song.mp3';
+  const filePath = path.join(__dirname, 'song.mp3');
   console.log("Generating song description...");
+  console.log("Looking for song at:", filePath);
   const songDesc = await getSongDescription(filePath);
   console.log("Song Description:\n", songDesc);
 
-  const monthlyListeners = getPopularityFromMetadata(); // hardcoded monthly listener count
+  const monthlyListeners = getPopularityFromMetadata(); // get popularity from metadata
 
   let agentAOutput: AgentOutput | undefined;
   let agentBOutput: AgentOutput | undefined;
@@ -197,14 +198,16 @@ export async function getAgentRecommendation(): Promise<{ licensingCost: number,
   };
 }
 
-// Main entry point wrapped in an IIFE
-(async function main() {
-  try {
-    const result = await getAgentRecommendation();
-    console.log("\nFinal agreed values:");
-    console.log("Licensing Cost:", result.licensingCost);
-    console.log("Royalties Percent:", result.royaltiesPercent);
-  } catch (err) {
-    console.error("Error in main:", err);
-  }
-})();
+// Only run the main function if this file is executed directly (not imported)
+if (require.main === module) {
+  (async function main() {
+    try {
+      const result = await getAgentRecommendation();
+      console.log("\nFinal agreed values:");
+      console.log("Licensing Cost:", result.licensingCost);
+      console.log("Royalties Percent:", result.royaltiesPercent);
+    } catch (err) {
+      console.error("Error in main:", err);
+    }
+  })();
+}
