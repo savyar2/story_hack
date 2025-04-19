@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+<head>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>Spotify Top Tracks</title>
+    <style>
+        body { font-family: "Helvetica Neue", sans-serif; margin: 20px;background: #121212;
+            color: dimgray;}
+
+        #tracks-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Auto grid */
+    gap: 15px;
+    margin-top: 20px;
+        }
+.track {
+    padding: 15px;
+    border-radius: 10px;
+        transition: all 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.track:hover {
+    transform: scale(1.05);
+    background: #282828;
+    color: white;
+}
+
+/* Track Text */
+
+
+.artist-name {
+    color: #b3b3b3;
+    font-size: 14px;
+}
+
+.menu {
+    padding-right: 100px;
+    /*border-right: 2px solid #cccccc;*/
+    height: inherit;
+    border-radius: 10px;
+    background: #ebfcce;
+    overflow-y: auto; /* Adds scroll if needed */
+}
+
+.menu-two {
+    /*border-right: 2px solid #cccccc;*/
+    flex: 1;
+    height: 200vh;
+    border-radius: 10px;
+    background: linear-gradient( #d4fa92, white);
+    overflow-y: auto; /* Adds scroll if needed */
+    padding-left: 100px;
+    padding-right: 100px;
+    padding-bottom: 100px;
+    padding-top: 50px;
+    width: 60vw;
+}
+
+.grid {
+    padding-left: 10px;
+}
+
+.track-name {
+    color: #2D2D2D; /*both the title and artist name*/
+}
+
+.track-name:hover {
+    color: #ffffff; /*both the title and artist name*/
+}
+
+
+.artist-name {
+    color: #555555;
+}
+
+ul p {
+  color: #b3b3b3;
+  text-decoration: none;
+}
+
+ul p:hover, ul p:focus {
+    color: #000000;
+}
+
+.logout:hover {
+    background-color: gray;
+    height: 20px;
+}
+.logout {
+    border-radius: 3px;
+    padding: 20px;
+    color: white;
+}
+
+a:visited {
+    color: black;
+    text-decoration: none;
+}
+
+a:hover {
+    color: black;
+    text-decoration: none;
+}
+
+a:active {
+    color: black;
+    text-decoration: none;
+}
+
+a:link {
+    color: black;
+    text-decoration: none;
+}
+
+input {
+    height: 40px;
+    color: white;
+}
+
+
+.track:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.track:hover .track-name {
+    color: white;
+}
+
+.track:hover .artist-name {
+    color: lightgray;
+}
+        .license-button {
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .license-button:hover {
+            background-color: #889933;
+        }
+        button {
+  background-color: #ffffff;
+  color: #000000;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 14px 30px;
+  border-radius: 40px;
+  cursor: pointer;
+  margin-left: 20px;
+            align-items: center;
+}
+button:hover,
+button:active,
+button:focus {
+  background-color: #f2f2f2;
+}
+
+.search-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+    #search-bar {
+    width: 60%;
+    padding: 12px 15px;
+    border-radius: 30px;
+    border: none;
+    font-size: 16px;
+    background: #282828;
+    color: white;
+    outline: none;
+    display: flex;
+    align-items: center;
+        margin-bottom: 20px;
+}
+
+    .search-container button {
+    background: white;
+    color: black;
+    font-size: 14px;
+    padding: 10px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+    margin-left: -50px; /* Overlap input field */
+    border: none;
+}
+
+.search-container button:hover {
+    background: #1db954;
+    color: white;
+}
+
+.image-container {
+  position: relative; /* Establish a positioning context for the button */
+  display: inline-block; /* Adjust as needed based on your layout */
+}
+
+.image-container:hover img {
+  opacity: 0.25; /* Show the button when hovering over the container */
+}
+
+.image-container:hover .hover-button {
+  opacity: 1; /* Show the button when hovering over the container */
+}
+
+.hover-button {
+  position: absolute;
+  top: 50%;
+  left: 40%;
+  transform: translate(-50%, -50%);
+  opacity: 0; /* Hide the button by default */
+  transition: opacity 0.3s ease;
+  /* Optionally add additional styling for the button (e.g., padding, background) */
+}
+
+/*img:hover {*/
+/*    opacity: 25%;*/
+/*}*/
+    </style>
+</head>
+<body>
+<div style="display: flex; justify-content: center; align-items: inherit;">
+
+    <input type="text" id="search-bar" placeholder="Search for a track"/>
+    <div style="padding-left: 10px">
+        <button type="button" onclick="logout()">Log Out</button>
+    </div>
+</div>
+<div style="display: flex">
+    <div class="menu">
+    <ul>
+            <h2>Categories</h2>
+    <p style="font-weight: bold">        <span class="fa fas fa-music" style="padding-right: 10px"></span>Spotify Top Tracks</p>
+    <a href="/licenses.html?token=<%= access_token %>"><p style="font-weight: bold"><span class="fa fas fa-book"  style="padding-right: 10px"></span>Licenses</p></a>
+<!--        <p class="logout" id="logout-btn">Logout</p>-->
+<!--        <script>-->
+<!--    document.getElementById("logout-btn").addEventListener("click", function () {-->
+<!--        // Remove the access token-->
+<!--        localStorage.removeItem("spotify_token");-->
+
+<!--        // Redirect to login page (or reload)-->
+<!--        window.location.href = "/"; // Change this if you have a different login page-->
+<!--    });-->
+<!--</script>-->
+    </ul>
+    </div>
+    <div class="grid">
+        <div class="menu-two">
+<!--<div style="display: flex">-->
+<!--                <input type="text" id="search-bar" placeholder="Search for a track..."/>-->
+<!--    <div style="padding-left: 10px">-->
+<!--            <p class="logout" id="logout-btn" style="padding-left: 10px; margin: 0; cursor: pointer; text-align: center;">Logout</p>-->
+<!--    </div>-->
+<!--            <script>-->
+<!--    document.getElementById("logout-btn").addEventListener("click", function () {-->
+<!--        // Remove the access token-->
+<!--        localStorage.removeItem("spotify_token");-->
+
+<!--        // Redirect to login page (or reload)-->
+<!--        window.location.href = "/logout.html"; // Change this if you have a different login page-->
+<!--    });-->
+<!--</script>-->
+<!--</div>-->
+        <div id="tracks-container"></div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        if (!token) {
+            document.body.innerHTML = '<h1>Error: No access token found</h1>';
+        } else {
+            localStorage.setItem('spotify_token', token);
+            const tracksContainer = document.getElementById('tracks-container');
+            const searchBar = document.getElementById('search-bar');
+            let tracks = []; // Store tracks globally
+
+            fetch('https://api.spotify.com/v1/me/top/tracks?limit=50', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`HTTP error! Status: ${response.status}, Response: ${text}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                tracksContainer.innerHTML = '';
+
+                if (!data.items || data.items.length === 0) {
+                    tracksContainer.innerHTML = '<p>No tracks found.</p>';
+                    return;
+                }
+
+         tracks = data.items; // Store tracks in the global variable
+        displayTracks(tracks); // Initial render);
+            })
+            .catch(error => {
+                console.error('Error fetching tracks:', error);
+                tracksContainer.innerHTML = `<p>Error loading tracks: ${error.message}</p>`;
+            });
+
+                    // Function to render tracks
+        // Function to render tracks
+    function displayTracks(filteredTracks) {
+        tracksContainer.innerHTML = ''; // Clear container
+
+filteredTracks.forEach(track => {
+  const trackElement = document.createElement('div');
+  trackElement.classList.add('track');
+  trackElement.innerHTML = `
+    <div class="image-container">
+      <img src="${track.album.images[0]?.url || ''}" alt="Album Cover" width="100%" style="border-radius: 5px">
+      <button class="hover-button">License</button>
+    </div>
+    <span class="track-name">
+      ${track.name} <br>
+      <span class="artist-name">${track.artists.map(a => a.name).join(', ')}</span>
+    </span>
+  `;
+
+  // Add click event handler specifically for the License button
+  trackElement.querySelector('.hover-button').onclick = (e) => {
+    e.stopPropagation(); // Prevent parent track element click
+    
+    const metadata = {
+        name: track.name,
+        artist: track.artists.map(a => a.name).join(', '),
+        album: track.album.name,
+        release_date: track.album.release_date,
+        duration_ms: track.duration_ms,
+        popularity: track.popularity,
+        spotify_url: track.external_urls.spotify,
+        image_url: track.album.images[0]?.url || '',
+        //images: track.album.images
+    };
+    
+    // Log to browser console
+    console.log('🎵 Song Metadata:', metadata);
+    
+    // Send to server to log in terminal
+    fetch('/log-metadata', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(metadata)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Metadata saved and script executed successfully');
+            alert('License request submitted successfully!');
+        } else {
+            console.error('Error:', data.error);
+            alert('Error processing license request.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error communicating with server.');
+    });
+  };
+
+  tracksContainer.appendChild(trackElement);
+});
+    }
+
+                // Search Functionality
+        searchBar.addEventListener('input', (event) => {
+            const query = event.target.value.toLowerCase();
+            const filteredTracks = tracks.filter(track =>
+                track.name.toLowerCase().includes(query) ||
+                track.artists.some(artist => artist.name.toLowerCase().includes(query))
+            );
+            displayTracks(filteredTracks); // Update display
+        });
+
+
+        }
+
+        function logout() {
+  // Clear the access token (assuming you stored it in localStorage)
+  localStorage.removeItem('access_token'); // Or use sessionStorage if that's where you stored it
+
+  // Redirect the user to Spotify's logout page to invalidate their session
+  window.location.href = 'https://www.spotify.com/logout/';
+  window.location.href = 'https://www.spotify.com/login/';
+  window.location.href = '/logout.html';
+}
+    </script>
+    </div>
+    </div>
+</div>
+</body>
+</html>
