@@ -3,6 +3,8 @@ import axios from 'axios';
 import querystring from 'querystring';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
+import { exec } from 'child_process';
 
 // Load environment variables
 dotenv.config();
@@ -63,7 +65,7 @@ app.get('/callback', async (req, res) => {
     const access_token = response.data.access_token;
     
     // Redirect to tracks.html with the token included
-    res.redirect(`/tracks.html?token=${access_token}`);
+    res.redirect(`/tracks1.html?token=${access_token}`);
     
   } catch (error) {
     console.error('Error getting access token:', error);
@@ -74,7 +76,42 @@ app.get('/callback', async (req, res) => {
 // Add the missing endpoint to handle metadata logging from the license button
 app.post('/log-metadata', (req, res) => {
   console.log('🎵 Song Metadata:', req.body);
-  res.json({ success: true });
+  
+  // Define path to metadata.json
+  const metadataFilePath = path.join(__dirname, 'metadata.json');
+  
+  // Save the metadata exactly as received from the client
+  fs.writeFileSync(
+    metadataFilePath, 
+    JSON.stringify(req.body, null, 2)
+  );
+  
+  console.log(`Metadata saved to ${metadataFilePath}`);
+  
+  // Run the simpleMintAndRegisterSpg.ts script
+  console.log('Running simpleMintAndRegisterSpg.ts...');
+  
+  // Get the absolute path to the script
+  const scriptPath = path.resolve(__dirname, 'simpleMintAndRegisterSpg.ts');
+  console.log(`Script full path: ${scriptPath}`);
+  
+  // Use exec to run the script with ts-node
+  exec(`npx ts-node "${scriptPath}"`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error executing script: ${error.message}`);
+      return res.status(500).json({ error: 'Failed to run registration script' });
+    }
+    
+    if (stderr) {
+      console.error(`Script stderr: ${stderr}`);
+    }
+    
+    console.log(`Script output: ${stdout}`);
+    res.json({ 
+      success: true, 
+      message: 'Metadata processed and registration script executed' 
+    });
+  });
 });
 
 // Start the server
