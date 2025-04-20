@@ -1,0 +1,24 @@
+[
+  {
+    "name": "St. Chroma (feat. Daniel Caesar)",
+    "artist": "Tyler, The Creator, Daniel Caesar",
+    "album": "CHROMAKOPIA",
+    "release_date": "2024-10-28",
+    "duration_ms": 197019,
+    "popularity": 83,
+    "spotify_url": "https://open.spotify.com/track/1QoyuMHNBe7lg3YW4Qtll4",
+    "image_url": "https://i.scdn.co/image/ab67616d0000b273124e9249fada4ff3c3a0739c",
+    "explorer_link": "https://aeneid.explorer.story.foundation/ipa/0x29a4F27cc0c7AC7aDCce5356824200501E4CCffc"
+  },
+  {
+    "name": "L.A.",
+    "artist": "Brent Faiyaz",
+    "album": "Sonder Son",
+    "release_date": "2017-10-13",
+    "duration_ms": 316045,
+    "popularity": 64,
+    "spotify_url": "https://open.spotify.com/track/3phwC9mMlIwLuTuhReiYia",
+    "image_url": "https://i.scdn.co/image/ab67616d0000b27358f247ab95be420b4bbbceea",
+    "explorer_link": "https://aeneid.explorer.story.foundation/ipa/0x2B0e7482C5f01286369045cC27152a5303B0a193"
+  }
+]

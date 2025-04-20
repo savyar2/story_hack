@@ -34,8 +34,8 @@ const main = async function () {
             console.log("Using metadata from song:", metadata.title);
             
             // Clear the file by writing an empty JSON object
-            fs.writeFileSync(metadataFilePath, JSON.stringify({}, null, 2));
-            console.log("Metadata file cleared after reading");
+            // fs.writeFileSync(metadataFilePath, JSON.stringify({}, null, 2));
+            // console.log("Metadata file cleared after reading");
         } else {
             console.log("No song metadata available. Please click the License button on a track first.");
             return;

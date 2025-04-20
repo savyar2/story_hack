@@ -87,6 +87,45 @@ app.post('/log-metadata', (req, res) => {
   );
   
   console.log(`Metadata saved to ${metadataFilePath}`);
+
+  // Define path to licenseimages.json
+  const licenseImageFilePath = path.join(__dirname, 'licenseimages.json');
+  
+  // Check if file exists and has content
+  let existingData = [];
+  if (fs.existsSync(licenseImageFilePath)) {
+    try {
+      const fileContent = fs.readFileSync(licenseImageFilePath, 'utf8');
+      if (fileContent.trim()) {
+        const parsed = JSON.parse(fileContent);
+        // Handle both array and single object formats
+        existingData = Array.isArray(parsed) ? parsed : [parsed];
+      }
+    } catch (error) {
+      console.error('Error reading existing license data:', error);
+      // Continue with empty array if there's an error
+    }
+  }
+  
+  // Check if this track is already in the collection (avoid duplicates)
+  const isDuplicate = existingData.some(track => 
+    track.name === req.body.name && track.artist === req.body.artist
+  );
+  
+  if (!isDuplicate) {
+    // Add new entry
+    existingData.push(req.body);
+    
+    // Save the updated collection
+    fs.writeFileSync(
+      licenseImageFilePath, 
+      JSON.stringify(existingData, null, 2)
+    );
+    
+    console.log(`New track added to license images file: ${req.body.name}`);
+  } else {
+    console.log(`Track already exists in license collection: ${req.body.name}`);
+  }
   
   // Run the simpleMintAndRegisterSpg.ts script
   console.log('Running simpleMintAndRegisterSpg.ts...');
@@ -107,11 +146,79 @@ app.post('/log-metadata', (req, res) => {
     }
     
     console.log(`Script output: ${stdout}`);
+
+    // Extract IPA ID and explorer link from stdout
+    let explorer_link = '';
+    const match = stdout.match(/View on the explorer: (https:\/\/aeneid\.explorer\.story\.foundation\/ipa\/0x[a-fA-F0-9]+)/);
+    if (match && match[1]) {
+      explorer_link = match[1];
+      
+      // Update the track in licenseimages.json with the explorer link
+      const licenseImageFilePath = path.join(__dirname, 'licenseimages.json');
+      let existingData = [];
+      
+      if (fs.existsSync(licenseImageFilePath)) {
+        try {
+          const fileContent = fs.readFileSync(licenseImageFilePath, 'utf8');
+          if (fileContent.trim()) {
+            const parsed = JSON.parse(fileContent);
+            existingData = Array.isArray(parsed) ? parsed : [parsed];
+          }
+        } catch (error) {
+          console.error('Error reading existing license data:', error);
+        }
+      }
+      
+      // Find the track and add the explorer link
+      for (let i = 0; i < existingData.length; i++) {
+        if (existingData[i].name === req.body.name && existingData[i].artist === req.body.artist) {
+          existingData[i].explorer_link = explorer_link;
+          break;
+        }
+      }
+      
+      // Save the updated collection
+      fs.writeFileSync(
+        licenseImageFilePath, 
+        JSON.stringify(existingData, null, 2)
+      );
+      
+      console.log(`Updated licenseimages.json with explorer link: ${explorer_link}`);
+    }
+
     res.json({ 
       success: true, 
       message: 'Metadata processed and registration script executed' 
     });
   });
+});
+
+// Endpoint to serve the licenseimages.json file
+app.get('/api/licensed-tracks', (req, res) => {
+  try {
+    const licenseImageFilePath = path.join(__dirname, 'licenseimages.json');
+    
+    // Check if the file exists
+    if (fs.existsSync(licenseImageFilePath)) {
+      // Read the file
+      const fileContent = fs.readFileSync(licenseImageFilePath, 'utf8');
+      
+      // Set the content type header
+      res.setHeader('Content-Type', 'application/json');
+      
+      // Send the file content directly
+      res.send(fileContent);
+      
+      console.log('Served license images data:', fileContent);
+    } else {
+      // If file doesn't exist, return empty array
+      console.log('No license images file found at:', licenseImageFilePath);
+      res.json([]);
+    }
+  } catch (error) {
+    console.error('Error reading license images file:', error);
+    res.status(500).json({ error: 'Failed to read license data' });
+  }
 });
 
 // Start the server

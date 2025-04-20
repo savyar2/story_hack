@@ -281,11 +281,8 @@ button:focus {
             const searchBar = document.getElementById('search-bar');
             let tracks = []; // Store tracks globally
 
-            fetch('https://api.spotify.com/v1/me/top/tracks?limit=50', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
+            // Fetch from licenseimages.json instead of Spotify API
+            fetch('/api/licensed-tracks')
             .then(response => {
                 if (!response.ok) {
                     return response.text().then(text => {
@@ -295,77 +292,68 @@ button:focus {
                 return response.json();
             })
             .then(data => {
-                tracksContainer.innerHTML = '';
-
-                if (!data.items || data.items.length === 0) {
+                // Convert single track object to array if needed
+                tracks = Array.isArray(data) ? data : [data];
+                
+                if (tracks.length === 0) {
                     tracksContainer.innerHTML = '<p>No tracks found.</p>';
                     return;
                 }
-
-         tracks = data.items; // Store tracks in the global variable
-        displayTracks(tracks); // Initial render);
+                
+                console.log('Loaded tracks:', tracks); // Debug log
+                displayTracks(tracks); // Initial render
             })
             .catch(error => {
                 console.error('Error fetching tracks:', error);
                 tracksContainer.innerHTML = `<p>Error loading tracks: ${error.message}</p>`;
             });
 
-                    // Function to render tracks
-        // Function to render tracks
-    function displayTracks(filteredTracks) {
-        tracksContainer.innerHTML = ''; // Clear container
+            // Function to render tracks
+            function displayTracks(filteredTracks) {
+                tracksContainer.innerHTML = ''; // Clear container
+                
+                if (filteredTracks.length === 0) {
+                    tracksContainer.innerHTML = '<p>No tracks found.</p>';
+                    return;
+                }
 
-filteredTracks.forEach(track => {
-  const trackElement = document.createElement('div');
-  trackElement.classList.add('track');
-  trackElement.innerHTML = `
-    <div class="image-container">
-      <img src="${track.album.images[0]?.url || ''}" alt="Album Cover" width="100%" style="border-radius: 5px">
-      <button class="hover-button">License</button>
-    </div>
-    </span>
-  `;
+                filteredTracks.forEach(track => {
+                    const trackElement = document.createElement('div');
+                    trackElement.classList.add('track');
+                    trackElement.innerHTML = `
+                        <div class="image-container">
+                            <img src="${track.image_url || ''}" alt="Album Cover" width="100%" style="border-radius: 5px">
+                        </div>
+                    `;
 
-            // Handle click to log metadata
-            trackElement.onclick = () => {
-                const metadata = {
-                    name: track.name,
-                    artist: track.artists.map(a => a.name).join(', '),
-                    album: track.album.name,
-                    release_date: track.album.release_date,
-                    duration_ms: track.duration_ms,
-                    popularity: track.popularity,
-                    spotify_url: track.external_urls.spotify,
-                    image_url: track.album.images[0]?.url || '',
-                };
+                    // Handle click to log metadata
+                    trackElement.onclick = () => {
 
-                console.log('🎵 Song Metadata:', metadata);
+                        window.open(track.explorer_link, '_blank');
 
-                // Send to server
-                fetch('/log-metadata', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(metadata)
+                        // Send to server
+                        fetch('/log-metadata', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(track)
+                        });
+                    };
+
+                    tracksContainer.appendChild(trackElement);
                 });
-            };
+            }
 
-            tracksContainer.appendChild(trackElement);
-        });
-    }
-
-                // Search Functionality
-        searchBar.addEventListener('input', (event) => {
-            const query = event.target.value.toLowerCase();
-            const filteredTracks = tracks.filter(track =>
-                track.name.toLowerCase().includes(query) ||
-                track.artists.some(artist => artist.name.toLowerCase().includes(query))
-            );
-            displayTracks(filteredTracks); // Update display
-        });
-
-
+            // Search Functionality
+            searchBar.addEventListener('input', (event) => {
+                const query = event.target.value.toLowerCase();
+                const filteredTracks = tracks.filter(track =>
+                    track.name.toLowerCase().includes(query) ||
+                    track.artist.toLowerCase().includes(query)
+                );
+                displayTracks(filteredTracks); // Update display
+            });
         }
 
         function logout() {

@@ -1,1 +1,11 @@
-{}
+{
+  "name": "L.A.",
+  "artist": "Brent Faiyaz",
+  "album": "Sonder Son",
+  "release_date": "2017-10-13",
+  "duration_ms": 316045,
+  "popularity": 64,
+  "spotify_url": "https://open.spotify.com/track/3phwC9mMlIwLuTuhReiYia",
+  "image_url": "https://i.scdn.co/image/ab67616d0000b27358f247ab95be420b4bbbceea",
+  "explorer_link": "https://aeneid.explorer.story.foundation/ipa/0x8CcCd710EC57e69f173E4Afc79D0c0Ab468045cf"
+}
